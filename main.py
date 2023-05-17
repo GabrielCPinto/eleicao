@@ -1,24 +1,40 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-from lider import Nodulo
+import random
+SIZE = 10
 
+
+def start():
+    G = nx.DiGraph()
+    for i in range(1, SIZE+1):
+        charge = round(random.random()*100, 2)
+        G.add_nodes_from([i], id=i, battery=charge)
+
+    return G
+
+
+def elect_leader(G, leader):
+
+    for i, node in enumerate(G.nodes.data()):
+
+        if i + 1 != leader['id']:
+            pass
+            G.add_edge(node[1]['id'], leader['id'])
+
+
+def choose_leader(G):
+    lst = []
+    for node in G.nodes.data():
+        lst.append(node[1])
+
+    leader = max(lst, key=lambda x: x['battery'])
+    return leader
 
 
 def main():
-    G = nx.Graph()
+    G = start()
 
-    G.add_node(1)
-    G.add_node(2)
-    G.add_node(3)
-    G.add_node(4)
-    G.add_node(5)
-
-    G.add_edge(1,2)
-    G.add_edge(1,3)
-    G.add_edge(2,3)
-    G.add_edge(3,4)
-    G.add_edge(4,5)
-    
+    elect_leader(G, choose_leader(G))
     nx.draw(G, with_labels=True)
     plt.show()
 
