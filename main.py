@@ -1,6 +1,12 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
+from multiprocessing import Process
+import threading
+import os
+import time
+import zmq
+import sys
 SIZE = 10
 
 
@@ -18,7 +24,6 @@ def elect_leader(G, leader):
     for i, node in enumerate(G.nodes.data()):
 
         if i + 1 != leader['id']:
-            pass
             G.add_edge(node[1]['id'], leader['id'])
 
 
@@ -31,10 +36,20 @@ def choose_leader(G):
     return leader
 
 
+def receive_election_message(G, leader, sender):
+    msg = str(sender['id'])
+    if sender['battery'] > leader['battery']:
+        print(f'Node {msg} sends OK')
+
+
 def main():
     G = start()
-
-    elect_leader(G, choose_leader(G))
+    leader = choose_leader(G)
+    print(G.nodes.data()[1])
+    receive_election_message(G, leader, G.nodes.data()[1])
+    if leader['battery'] <= 0:
+        leader = choose_leader(G)
+    elect_leader(G, leader)
     nx.draw(G, with_labels=True)
     plt.show()
 
