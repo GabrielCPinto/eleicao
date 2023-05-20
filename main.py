@@ -1,12 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
-from multiprocessing import Process
-import threading
-import os
-import time
-import zmq
-import sys
 SIZE = 10
 
 
@@ -14,15 +8,12 @@ def start():
     G = nx.DiGraph()
     for i in range(1, SIZE+1):
         charge = round(random.random()*100, 2)
-        G.add_nodes_from([i], id=i, battery=charge)
-
+        G.add_nodes_from([i], id=i, battery=charge, alive='yes')
     return G
 
 
-def elect_leader(G, leader):
-
+def link_leader(G, leader):
     for i, node in enumerate(G.nodes.data()):
-
         if i + 1 != leader['id']:
             G.add_edge(node[1]['id'], leader['id'])
 
@@ -31,25 +22,39 @@ def choose_leader(G):
     lst = []
     for node in G.nodes.data():
         lst.append(node[1])
-
     leader = max(lst, key=lambda x: x['battery'])
     return leader
 
 
-def receive_election_message(G, leader, sender):
-    msg = str(sender['id'])
-    if sender['battery'] > leader['battery']:
-        print(f'Node {msg} sends OK')
+def func(x):
+    return x['battery']
+
+
+def send_message(G, sender):
+    lst = []
+    for node in G.nodes.data():
+        if float(sender['battery']) < float(node[1]['battery']):
+            if node[1]['alive'] == 'yes':
+                lst.append(node[1])
+
+    lst.sort(key=lambda x: x['battery'])
+    if len(lst) > 1:
+        send_message(G, lst[0])
+    else:
+        return lst[0]
 
 
 def main():
     G = start()
     leader = choose_leader(G)
-    print(G.nodes.data()[1])
-    receive_election_message(G, leader, G.nodes.data()[1])
+    leader['alive'] = 'no'
+    print(G.nodes.data())
+    x = int(input('choose the sender(1-10): '))
+    send_message(G, G.nodes.data()[x])
     if leader['battery'] <= 0:
         leader = choose_leader(G)
-    elect_leader(G, leader)
+    link_leader(G, leader)
+
     nx.draw(G, with_labels=True)
     plt.show()
 
