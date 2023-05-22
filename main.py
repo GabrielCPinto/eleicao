@@ -14,7 +14,7 @@ def start():
 
 def link_leader(G, leader):
     for i, node in enumerate(G.nodes.data()):
-        if i + 1 != leader['id']:
+        if i + 1 != leader['id'] and node[1]['alive'] == 'yes':
             G.add_edge(node[1]['id'], leader['id'])
 
 
@@ -39,7 +39,7 @@ def send_message(G, sender):
 
     lst.sort(key=lambda x: x['battery'])
     if len(lst) > 1:
-        send_message(G, lst[0])
+        return send_message(G, lst[0])
     else:
         return lst[0]
 
@@ -48,12 +48,13 @@ def main():
     G = start()
     leader = choose_leader(G)
     leader['alive'] = 'no'
-    print(G.nodes.data())
-    x = int(input('choose the sender(1-10): '))
-    send_message(G, G.nodes.data()[x])
+    #print(G.nodes.data())
+    x = int(random.randint(1,SIZE))
+    new_leader = send_message(G, G.nodes.data()[x])
+    #link_leader(G, new_leader)
     if leader['battery'] <= 0:
         leader = choose_leader(G)
-    link_leader(G, leader)
+    link_leader(G, new_leader)
 
     nx.draw(G, with_labels=True)
     plt.show()
